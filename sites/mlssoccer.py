@@ -1,7 +1,10 @@
 import datetime
 
+import re
+import urllib
+
 from foulds.utils import scrape_soup, get_contents
-from foulds.cache import data_cache
+from foulds.cache import data_cache, set_cache
 
 
 # Scraping for new style mls games.
@@ -20,6 +23,7 @@ team_dict = {
     'NY': 'New York Red Bulls',
     'PHI': 'Philadelphia Union',
     'POR': 'Portland Timbers',
+    'PTI': 'Portland Timbers',
     'RSL': 'Real Salt Lake',
     'SEA': 'Seattle Sounders',
     'SJ': 'San Jose Earthquakes',
@@ -34,7 +38,12 @@ d2 = {
 @data_cache
 def scrape_game_data(url, competition):
     u2 = '%s/stats' % url
-    soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+
+    try:
+        soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+    except urllib.error.HTTPError:
+        return {}
+
     home_team = get_contents(soup.find("div", 'home-team-title'))
     away_team = get_contents(soup.find("div", 'away-team-title'))
 
@@ -73,7 +82,14 @@ def scrape_game_data(url, competition):
 def scrape_goals(url, competition):
     u2 = '%s/stats' % url
     game_data = scrape_game_data(url, competition)
-    soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+    if game_data is None:
+        return []
+
+    try:
+        soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+    except urllib.error.HTTPError:
+        return []
+    
 
     goals = []
     goal_trs = soup.find("div", {'id': 'goals'}).findAll("tr")[1:] # Skip header.
@@ -90,6 +106,7 @@ def scrape_goals(url, competition):
             minute = int(minute.replace('\'', ''))
         else:
             minute = int(minute.replace('\'', ''))
+
 
         assists = assists.replace('(', '').replace(')', '').split(',')
         goals.append({
@@ -140,9 +157,15 @@ def scrape_lineups(url, competition):
         return d
 
     u2 = '%s/rosters' % url
-    game_data = scrape_game_data(url, competition)
 
-    soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+    game_data = scrape_game_data(url, competition)
+    if game_data is None:
+        return []
+
+    try:
+        soup = scrape_soup(u2, fix_tags=True)#, refresh=True)
+    except urllib.error.HTTPError:
+        return []
 
     base = {
         #'team': game_dteam,
@@ -179,11 +202,11 @@ def scrape_lineups(url, competition):
 
     # Need to add in subs. Sort of difficult.
     for tr in home_subs.findAll('tr'):
-        a = process_tr(tr, game_data['home_team'], False)
+        a = process_tr(tr, game_data['team1'], False)
         lineups.append(a)
 
     for tr in away_subs.findAll('tr'):
-        a = process_tr(tr, game_data['home_team'], False)
+        a = process_tr(tr, game_data['team2'], False)
         lineups.append(a)
 
     return lineups
@@ -199,8 +222,13 @@ def scrape_schedule(url):
     return ['http://www.mlssoccer.com/%s' % e for e in match_hrefs]
 
 
+def extract_date(url):
+    year, month, day = [int(e) for e in re.search('(\d+)-(\d+)-(\d+)', url).groups()]
+    return datetime.date(year, month, day)
+
 def scrape_competition(url, competition):
-    urls = scrape_schedule(url)
+    urls = [url for url in scrape_schedule(url) if extract_date(url) < datetime.date.today()]
+
     games = [scrape_game_data(url, competition) for url in urls]
     goals = [scrape_goals(url, competition) for url in urls]
     lineups = [scrape_lineups(url, competition) for url in urls]
@@ -219,5 +247,8 @@ def scrape_competition(url, competition):
 if __name__ == "__main__":
     #scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=45&broadcast_type=all&op=Search&form_id=mls_schedule_form",
     #                   "MLS Cup Playoffs")
-    print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
-                              "MLS Cup"))
+    #print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
+    #                          "MLS Cup"))
+
+    print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2011&club=all&competition_type=46&broadcast_type=all&op=Search&form_id=mls_schedule_form",
+                              "Major League Soccer"))

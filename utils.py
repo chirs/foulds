@@ -53,13 +53,10 @@ def dict_to_str(d):
 
 
 
-def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_data={}):
+def scrape_url(url, refresh=False, encoding='utf-8', sleep=5, fix_tags=False, url_data={}):
     """
     Scrape a url, or just use a version saved in mongodb.
     """
-    # Might want to allow a list of encodings.
-    if encoding is None:
-        encoding = 'utf-8'
 
     # Should be connection.cache
     data = None
@@ -68,8 +65,6 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
             p = os.path.join(PAGE_CACHE_FOLDER, to_hash(url))
             if os.path.exists(p):
                 data = gzip.open(p, 'rb').read()
-            #raise KeyError()
-            #data = db.Get(url)
             print("pulling %s from page cache" % url)
         except KeyError:
             pass
@@ -140,7 +135,10 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
     data = data.replace('<img alt="" src="/sites/league/files/eljimador_300x100.gif" style="border: medium none; width: 300px; height: 100px;" <img', "<img")
     """
     #data = data.replace("""onclick="this.href=this.href+'?ref=espn_deportes&refkw=deportes+tickets'""", '')
-    
+
+    if encoding:
+        data = data.decode(encoding)
+
     return data
 
 

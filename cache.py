@@ -94,6 +94,7 @@ def set_data_cache(cache_id, value):
     f.close()
 
 
+
 def get_data_cache(cache_id):
     """
     Get a value from cache.
@@ -164,6 +165,8 @@ class set_cache(AbstractCache):
         key = hashlib.md5().hexdigest()
         value = self.func(*args)
         set_data_cache(key, value)
+
+
         return value
 
                                     
