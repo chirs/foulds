@@ -3,12 +3,12 @@ import hashlib
 import os
 import random
 import time
-from urllib import urlencode
-import urllib2
-from BeautifulSoup import BeautifulSoup
+from urllib.parse import urlencode
+from urllib.request import build_opener
+from bs4 import BeautifulSoup
 
 
-from settings import USER_AGENT, PAGE_CACHE_FOLDER
+from foulds.settings import USER_AGENT, PAGE_CACHE_FOLDER
 
 
 if not os.path.exists(PAGE_CACHE_FOLDER):
@@ -16,7 +16,7 @@ if not os.path.exists(PAGE_CACHE_FOLDER):
 
 
 def to_hash(s):
-    return hashlib.md5(s).hexdigest()
+    return hashlib.md5(s.encode('utf-8')).hexdigest()
 
 
 def get_id():
@@ -83,7 +83,7 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
         # gets trash back.
         #data = requests.get(url, headers=[('User-Agent', USER_AGENT)]).read()
 
-        opener = urllib2.build_opener()
+        opener = build_opener()
         opener.addheaders = [('User-agent', USER_AGENT)]
         if url_data:
             post = urlencode(url_data)
@@ -99,7 +99,13 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
         f.close()
 
     # jesus christ.
-    data = data.replace("</scr'+'ipt>", "</script>")
+    """
+    try:
+        data = data.replace("</scr'+'ipt>", "</script>")
+    except:
+        import pdb; pdb.set_trace()
+
+
     data = data.replace("</scr' + 'ipt", "</script")
     data = data.replace("</scr'+'ipt>", "</script>")
     data = data.replace("</SCRI' + 'PT>", "</SCRIPT>")
@@ -108,14 +114,17 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
     data = data.replace("<meta content=  </div>", "<meta></div>")
     data = data.replace("<meta charset=  </div>", "<meta></div>")
     data = data.replace("<p style=  </div>", "<p></div>")
+    """
 
 
+    """
     # Seeing this problem with mlssoccer.com for some reason.
     if fix_tags:
         data = data.replace("&lt;", '<')
         data = data.replace("&gt;", '>')
+    """
 
-
+    """
     # Missing quotation mark. (http://soccernet.espn.go.com/match?id=331193&cc=5901)
     data = data.replace('href=http', 'href="http')
 
@@ -129,8 +138,8 @@ def scrape_url(url, refresh=False, encoding=None, sleep=5, fix_tags=False, url_d
 
     # http://www.mlssoccer.com/schedule?month=all&year=1996&club=all&competition_type=all
     data = data.replace('<img alt="" src="/sites/league/files/eljimador_300x100.gif" style="border: medium none; width: 300px; height: 100px;" <img', "<img")
-
-    data = data.replace("""onclick="this.href=this.href+'?ref=espn_deportes&refkw=deportes+tickets'""", '')
+    """
+    #data = data.replace("""onclick="this.href=this.href+'?ref=espn_deportes&refkw=deportes+tickets'""", '')
     
     return data
 
@@ -148,7 +157,7 @@ def scrape_post(url, options):
 
     options_string = dict_to_str(options)
 
-    opener = urllib2.build_opener()
+    opener = build_opener()
     opener.addheaders = [('User-agent', USER_AGENT)]
     data = opener.open(url, options_string).read()
 

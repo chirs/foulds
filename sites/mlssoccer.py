@@ -1,7 +1,7 @@
 import datetime
 
-from utils import scrape_soup, get_contents
-from cache import data_cache
+from foulds.utils import scrape_soup, get_contents
+from foulds.cache import data_cache
 
 
 # Scraping for new style mls games.
@@ -219,5 +219,5 @@ def scrape_competition(url, competition):
 if __name__ == "__main__":
     #scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=45&broadcast_type=all&op=Search&form_id=mls_schedule_form",
     #                   "MLS Cup Playoffs")
-    print scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
-                              "MLS Cup")
+    print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
+                              "MLS Cup"))

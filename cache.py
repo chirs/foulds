@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 import datetime
 import functools
 import gzip
@@ -8,7 +8,7 @@ import json
 import os
 
 
-from settings import USER_AGENT, DATA_CACHE_FOLDER
+from foulds.settings import USER_AGENT, DATA_CACHE_FOLDER
 
 if not os.path.exists(DATA_CACHE_FOLDER):
     os.makedirs(DATA_CACHE_FOLDER)
@@ -90,7 +90,7 @@ def set_data_cache(cache_id, value):
 
     p = os.path.join(DATA_CACHE_FOLDER, cache_id)
     f = gzip.open(p, 'wb')
-    cPickle.dump( value, f)
+    pickle.dump( value, f)
     f.close()
 
 
@@ -101,7 +101,7 @@ def get_data_cache(cache_id):
 
     p = os.path.join(DATA_CACHE_FOLDER, cache_id)
     f = gzip.open(p, 'rb')
-    data = cPickle.load(f)
+    data = pickle.load(f)
     f.close()
     return data
 
@@ -135,7 +135,8 @@ class data_cache(AbstractCache):
 
     def __call__(self, *args):
 
-        key = hashlib.md5('%s:%s' % (self.func.func_name, args)).hexdigest()
+        name = ('%s:%s' % (self.func.__name__, args)).encode('utf-8')
+        key = hashlib.md5(name).hexdigest()
 
         # Try to retrieve from the cache.
         try:
@@ -159,7 +160,8 @@ class set_cache(AbstractCache):
     def __call__(self, *args):
         # Should maybe fail rather than returning None?
         # Presumably need kwargs in here too?
-        key = hashlib.md5('%s:%s' % (self.func.func_name, args)).hexdigest()
+        name = ('%s:%s' % (self.func.__name__, args)).encode('utf-8')
+        key = hashlib.md5().hexdigest()
         value = self.func(*args)
         set_data_cache(key, value)
         return value
