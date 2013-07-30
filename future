@@ -1,0 +1,37 @@
+
+# Caribbean football database.
+url = 'http://www.caribbeanfootballdatabase.com/jamaica/players/seanfraser.html'
+
+# Seems like espn.com might be a good source for college soccer scores.
+college_scores = 'http://scores.espn.go.com/ncaa/scoreboard?date=20110918&sport=current'
+
+# Not sure but a pretty big site.
+#http://www.goal.com/en-us/people/mexico/17810/arturo-ledesma
+
+
+url = 'http://www.womensprosoccer.com/Home/boxscores/2009/875056.aspx'
+
+url = 'http://www.topdrawersoccer.com/college-soccer/college-scoreboard/men/divisionid-1'
+
+url = 'http://www.topdrawersoccer.com/college-soccer/boxscore/gameid-14947'
+
+'http://www.pointstreak.com/prostats/teamplayerstats.html?teamid=223813&seasonid=4942
+
+# Champions League, European Cup, etc.
+# Good for cup competitions, not for league competitions.
+
+s = 'http://www.eurocupshistory.com/champions_league/1999-2000'
+
+
+# http://www.gozips.com/sports/msoc/archive
+
+# http://www.uefa.com/uefachampionsleague/season=1959/matches/all/index.html
+# Champions League 1959 - ?
+# http://www.uefa.com/uefachampionsleague/season=2009/matches/round=15273/match=303475/index.html
+
+# This is where we'll eventually put the UEFA Champions League.
+
+
+http://fussball.wettpoint.com/en/results.html
+
+    url = 'http://www.whoscored.com/Players/%s' % player_id

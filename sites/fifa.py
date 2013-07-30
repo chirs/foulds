@@ -96,11 +96,6 @@ def scrape_everything(competition):
     return (games, goals, lineups)
 
 
-
-    
-
-
-
 def scrape_fifa_scoreboard(tournament_id, edition_id):
     """
     Get the game urls for a given year.
@@ -374,7 +369,7 @@ def scrape_fifa_goals(url, competition):
     goals = [get_contents(e) for e in goals_div.parent.parent.findAll("li")]
     goals = [goal_replace.get(e, e) for e in goals]
 
-    goal_re = re.compile("^(?P<name>.*?) \((?P<team>[A-Z]+)\) (?P<minute>\d+)'?")
+    goal_re = re.compile("^(?P<name>.*?) \((?P<team>[A-Z]+)\) (?P<minute>\d+)'?(?: Ht)?")
 
     game_data = scrape_fifa_game(url, competition)
 
@@ -409,7 +404,7 @@ def scrape_fifa_goals(url, competition):
     return l
     
 
-@data_cache
+@set_cache
 def scrape_fifa_lineups(url, competition):
     """
     Scrape lineups for a game.

@@ -24,15 +24,21 @@ def scrape_aleague():
 
     goals = []
     for season, gid in l:
-        games.append(scrape_aleague_goals(gid, season))
+        goals.append(scrape_aleague_goals(gid, season))
 
     lineups = []
+    #for season, gid in l:
+    #    lineups.append(scrape_aleague_lineups(gid, season))
+
+    game_stats = []
     for season, gid in l:
-        games.append(scrape_aleague_lineups(gid, season))
+        game_stats.append(scrape_aleague_game_stats(gid, season))
+
+
 
     games = [e for e in games if e]
     goals = [e for e in goals if e]
-    lineups = [e for e in lineups if e]
+    #lineups = [e for e in lineups if e]
         
     return (games, goals, lineups)
 
@@ -96,10 +102,8 @@ def scrape_aleague_game(gid, season):
 @data_cache
 def scrape_aleague_goals(gid, season):
 
-    import pdb; pdb.set_trace()
-
     game_url = 'http://www.footballaustralia.com.au/aleague/matchcentre/matchstats/filler/%s' % gid
-    game_data = scrape_aleague_game(game_url, season)
+    game_data = scrape_aleague_game(gid, season)
 
     soup = scrape_soup(game_url)
     
@@ -111,7 +115,50 @@ def scrape_aleague_goals(gid, season):
     l = []
     for i, g in enumerate(goals, start=1):
         time, player = g
-        minute = int(time.replace('\'', ''))
+        minute = int(time.replace('\'', '').replace(':', ''))
+
+        # site doesn't explicitly state team.
+        # so figure it out.
+        if i <= game_data['team1_score']:
+            team = game_data['team1']
+        else:
+            team = game_data['team2']
+        
+
+        l.append({
+                'team': '',
+                'competition': 'Hyundai A-League',
+                'date': game_data['date'],
+                'team': team,
+                'goal': player,
+                'minute': minute,
+                'assists': [],
+                'season': season,
+                })
+                
+    return l
+
+
+
+@set_cache
+def scrape_aleague_game_stats(gid, season):
+
+    game_url = 'http://www.footballaustralia.com.au/aleague/matchcentre/matchstats/filler/%s' % gid
+    game_data = scrape_aleague_game(gid, season)
+
+    soup = scrape_soup(game_url)
+
+    import pdb; pdb.set_trace()
+    
+
+    goal_scorers = [get_contents(e) for e in soup.findAll('div', 'goal_scorer')]
+    goal_times = [get_contents(e) for e in soup.findAll('div', 'goal_time')]
+    goals = zip(goal_times, goal_scorers)
+
+    l = []
+    for i, g in enumerate(goals, start=1):
+        time, player = g
+        minute = int(time.replace('\'', '').replace(':', ''))
 
         # site doesn't explicitly state team.
         # so figure it out.
@@ -154,6 +201,9 @@ def scrape_aleague_lineups(gid, season):
     lineup_url = 'http://www.footballaustralia.com.au/aleague/matchcentre/lineup/filler/%s' % gid
 
     game_data = scrape_aleague_game(gid, season)
+    if game_data == {}:
+        return []
+
 
     soup = scrape_soup(lineup_url)
 
@@ -161,7 +211,7 @@ def scrape_aleague_lineups(gid, season):
     away_starters, away_subs = soup.findAll('div', 'lineuphome')
 
     base = {
-        'competition': game_data['competition'],
+        'competition': 'Hyundai A-League',
         'date': game_data['date'],
         'season': season,
         #'order': None,
@@ -187,4 +237,6 @@ if __name__ == '__main__':
     #print(scrape_aleague_game(''))
     #print(scrape_aleague_goals(''))
     #print(scrape_scoreboard(31, '2006-2007'))
-    print(scrape_aleague())
+    #print(scrape_aleague())
+
+    print(scrape_aleague_game_stats(340, 'A-League'))

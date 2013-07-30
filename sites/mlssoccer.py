@@ -78,7 +78,7 @@ def scrape_game_data(url, competition):
         'sources': [url],
         }    
 
-@data_cache
+@set_cache
 def scrape_goals(url, competition):
     u2 = '%s/stats' % url
     game_data = scrape_game_data(url, competition)
