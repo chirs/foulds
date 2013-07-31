@@ -34,4 +34,4 @@ s = 'http://www.eurocupshistory.com/champions_league/1999-2000'
 
 http://fussball.wettpoint.com/en/results.html
 
-    url = 'http://www.whoscored.com/Players/%s' % player_id
+url = 'http://www.whoscored.com/Players/%s' % player_id
