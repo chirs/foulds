@@ -82,8 +82,8 @@ def scrape_url(url, refresh=False, encoding='utf-8', sleep=5, fix_tags=False, ur
         opener.addheaders = [('User-agent', USER_AGENT)]
         if url_data:
             post = urlencode(url_data)
-            import pdb; pdb.set_trace()
-            data = opener.open(url, data=post).read()
+            #import pdb; pdb.set_trace()
+            data = opener.open(url, data=post.encode('utf-8')).read()
         else:
             data = opener.open(url).read()
 

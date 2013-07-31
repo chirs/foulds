@@ -87,13 +87,10 @@ def set_data_cache(cache_id, value):
     """
     Set a value in the cache.
     """
-
     p = os.path.join(DATA_CACHE_FOLDER, cache_id)
     f = gzip.open(p, 'wb')
-    pickle.dump( value, f)
+    pickle.dump(value, f)
     f.close()
-
-
 
 def get_data_cache(cache_id):
     """
@@ -129,15 +126,19 @@ class AbstractCache(object):
         return functools.partial(self.__call__, obj)
 
 
+def make_cache_key(func, args):
+    name = ('%s:%s' % (func.__name__, args)).encode('utf-8')
+    return hashlib.md5(name).hexdigest()
+
+
 class data_cache(AbstractCache):
     """
     A cache decorator that uses mongodb as a backend.
     """
 
     def __call__(self, *args):
+        key = make_cache_key(self.func, args)
 
-        name = ('%s:%s' % (self.func.__name__, args)).encode('utf-8')
-        key = hashlib.md5(name).hexdigest()
 
         # Try to retrieve from the cache.
         try:
@@ -161,12 +162,9 @@ class set_cache(AbstractCache):
     def __call__(self, *args):
         # Should maybe fail rather than returning None?
         # Presumably need kwargs in here too?
-        name = ('%s:%s' % (self.func.__name__, args)).encode('utf-8')
-        key = hashlib.md5().hexdigest()
+        key = make_cache_key(self.func, args)
         value = self.func(*args)
         set_data_cache(key, value)
-
-
         return value
 
                                     
