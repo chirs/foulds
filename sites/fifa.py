@@ -369,7 +369,7 @@ def scrape_fifa_goals(url, competition):
     goals = [get_contents(e) for e in goals_div.parent.parent.findAll("li")]
     goals = [goal_replace.get(e, e) for e in goals]
 
-    goal_re = re.compile("^(?P<name>.*?) \((?P<team>[A-Z]+)\) (?P<minute>\d+)'?(?: Ht)?")
+    goal_re = re.compile("^(?P<name>.*?) \((?P<team>[A-Z]+)\) (?P<minute>\d+)'?")
 
     game_data = scrape_fifa_game(url, competition)
 
@@ -431,11 +431,15 @@ def scrape_fifa_lineups(url, competition):
         else:
             import pdb; pdb.set_trace()
 
+        lineup_re = re.compile("(.*?)\(-(\d+)'(?: Ht)?\)")
+
+
+
         # Doesn't handle multiple subs yet.
         for starter in starters:
             starter = get_contents(starter)
             
-            m = re.search("(.*?)\(-(\d+)'\)", starter)
+            m = lineup_re.search(starter)
 
             if m:
                 name, off = m.groups()
@@ -469,12 +473,12 @@ def scrape_fifa_lineups(url, competition):
                 print("Confusing appearances %s" % sub)
                 name, _, _ = m.groups()
 
-            m = re.search("(.*?)\(\+(\d+)'\)", sub)
+            m = lineup_re.search(sub)
             if m:
                 name, on = m.groups()
                 off = 90
             else:
-                m = re.search("(.*?)\(\-(\d+)'\)", sub)
+                m = lineup_re.search(sub)
                 if m:
                     name, off = m.groups()
                     on = 90

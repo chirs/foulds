@@ -103,7 +103,7 @@ def scrape_game_data(url):
         }
 
 
-@set_cache
+@data_cache
 def scrape_goal_data(url):
     game_data = scrape_game_data(url)
 

@@ -52,14 +52,24 @@ def scrape_schedule(url):
 
 
 def scrape_2013_games():
-    return [scrape_game_data(e) for e in scrape_schedule('http://uslpro.uslsoccer.com/schedules/2013/58092651.js?8778')]
+    l = []
+    for e in scrape_schedule('http://uslpro.uslsoccer.com/schedules/2013/58092651.js?8778'):
+        try:
+            l.append(scrape_game_data(e))
+        except:
+            print(e)
+    return l
+
 
 def scrape_2013_game_stats():
-    l = [scrape_game_stats(e) for e in scrape_schedule('http://uslpro.uslsoccer.com/schedules/2013/58092651.js?8778')]
-    return [e for e in l if e]
+    l = []
+    for e in scrape_schedule('http://uslpro.uslsoccer.com/schedules/2013/58092651.js?8778'):
+        l.append(scrape_game_stats(e))
+    return l
 
 
-@set_cache
+
+@data_cache
 def scrape_game_data(url):
     try:
         soup = scrape_soup(url, encoding='iso-8859-1')
@@ -116,7 +126,7 @@ def psf(e):
         return int(e)
 
     
-@set_cache
+@data_cache
 def scrape_game_stats(url):
     game_data = scrape_game_data(url)
 
@@ -170,4 +180,5 @@ def scrape_game_stats(url):
 if __name__ == "__main__":
     #print(scrape_game_data('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684775'))
     #print(scrape_game_stats('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684775'))
+    scrape_game_data('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684819')
     pass
