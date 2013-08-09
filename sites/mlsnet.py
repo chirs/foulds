@@ -1,22 +1,24 @@
 import datetime
-
+import hashlib
+import os
 import re
 import urllib
 
-from foulds.utils import scrape_soup, get_contents
 from foulds.cache import data_cache, set_cache
+from foulds.utils import scrape_soup, scrape_url, get_contents
+from foulds.settings import IMAGE_DIR
 
 
 team_abbreviations = [
     'chi',
     'clb',
-    'dc',
-    'met',
-    'ne',
     'col',
     #'dal',
+    'dc',
     'kc',
     'la',
+    'met',
+    'ne',
     'sj',
 ]
 
@@ -32,12 +34,12 @@ def scrape_2001_roster_bios(team_code):
     anchors = table.findAll('a')
     urls = [make_absolute(a['href']) for a in anchors]
 
-    l = [scrape_bio_image(url) for url in urls]
+    l = [scrape_2001_bio(url) for url in urls]
     return [e for e in l if e]
 
 
 @data_cache
-def scrape_bio_image(url):
+def scrape_2001_bio(url):
     try:
         soup = scrape_soup(url)
     except urllib.error.HTTPError:
@@ -49,29 +51,115 @@ def scrape_bio_image(url):
 
     
     imgs = [e for e in hrefs if '/players/' in e[0]]
-    if len(imgs) == 0:
+
+    if len(imgs) != 1:
         return None
-    elif len(imgs) == 1:
-        bi = imgs[0]
-        return (bi[1], make_absolute(bi[0]))
     else:
-        import pdb; pdb.set_trace()
-        x = 5
+        u = make_absolute(imgs[0][0])
+        img_path = download_image(u)
+
+        return {
+            'name': imgs[0][1],
+            'source': url,
+            'img': img_path,
+            }
 
 
-
-def scrape_2001_images():
+# data_cache because of bad urls.
+@data_cache
+def scrape_2001_bios():
     l = []
     for team in team_abbreviations:
         images = scrape_2001_roster_bios(team)
         l.extend(images)
-
     return l
+
+
+@set_cache
+def scrape_2005_bio(url):
+    try:
+        soup = scrape_soup(url)
+    except:
+        return None
+
+    main = soup.find('div', {'id': 'main'})
+
+    if main is None:
+        return None
+
+
+    tables = main.findAll('table')
+    player_img = tables[1].find('img')
+    img_src = player_img['src']
+
+    if img_src.endswith('gif'):
+        return None
+
+    bio_data = [e.next_sibling for e in main.findAll('span', 'bioGrey')]
+    name, position, height, weight, bd, hometown, previous_team = bio_data
+    birthdate = datetime.datetime.strptime(bd, "%B %d, %Y")
+
+    abs_src = make_absolute(img_src)
+
+    #img_path = download_image(abs_src)
+    img_path = None
+
+    print(name)
+    print(hometown)
+
+    return {
+        #'name': name,
+        #'hometown': hometown,
+        'birthdate': birthdate,
+        'img': img_path,
+
+        'source': url,
+        }
+
+
+
+
+def scrape_2005_bios():
+    url = 'http://web.archive.org/web/20050829135848/http://www.mlsnet.com/MLS/players/'
+    soup = scrape_soup(url)
+
+    hrefs = [e['href'] for e in soup.findAll('a')]
+
+    player_urls = [e for e in hrefs if 'players/bio' in e]
+    absolute_urls = [make_absolute(e) for e in player_urls]
+
+    l = []
+    for url in absolute_urls[:3]:
+        l.append(scrape_2005_bio(url))
+
+    return [e for e in l if e]
+
+
+def download_image(url):
+    if url.lower().endswith('.jpg') or url.lower().endswith('.jpeg'):
+        fn = hashlib.md5(url.encode('utf-8')).hexdigest() + '.jpg'
+        pth = os.path.join(IMAGE_DIR, fn)
+        if os.path.exists(pth):
+            return pth
         
+        try:
+            data = scrape_url(url, encoding=None)
+        except urllib.error.HTTPError:
+            return None
+
+        with open(pth, 'wb') as fn:
+            fn.write(data)
+        return pth
+    else:
+        raise
+
+
+
 
 if __name__ == "__main__":
-    print(scrape_2001_images())
-    #print(scrape_bio_image('http://web.archive.org/web/20020208192848/http://www.mlsnet.com/bios/evan_whitfield.html'))
+    #scrape_2005_bios()
+    print(scrape_2001_bios())
+    #print(scrape_2001_bio('http://web.archive.org/web/20020208192848/http://www.mlsnet.com/bios/evan_whitfield.html'))
 
     
     

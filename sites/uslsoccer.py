@@ -180,5 +180,6 @@ def scrape_game_stats(url):
 if __name__ == "__main__":
     #print(scrape_game_data('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684775'))
     #print(scrape_game_stats('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684775'))
-    scrape_game_data('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684819')
-    pass
+    #scrape_game_data('http://www.uslsoccer.com/scripts/runisa.dll?M2:gp::72013+Elements/Display+E+47107+Stats/+3684819')
+    scrape_2013_games()
+    

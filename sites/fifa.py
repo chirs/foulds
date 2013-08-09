@@ -404,7 +404,7 @@ def scrape_fifa_goals(url, competition):
     return l
     
 
-@set_cache
+@data_cache
 def scrape_fifa_lineups(url, competition):
     """
     Scrape lineups for a game.
@@ -515,9 +515,9 @@ def scrape_fifa_lineups(url, competition):
 
 
 if __name__ == "__main__":
-    #scrape_everything('FIFA U-17 World Cup')
+    scrape_everything('FIFA U-20 World Cup')
     scrape_everything('Olympic Games')
-    #scrape_all_world_cup_games()
+    scrape_all_world_cup_games()
 
     
     

@@ -7,6 +7,20 @@ from foulds.utils import scrape_soup, get_contents
 from foulds.cache import data_cache, set_cache
 
 
+def inches_to_cm(inches=0, feet=0):
+    if not inches and not feet:
+        return ''
+
+    if inches == '?' or feet == '?':
+        return ''
+
+    feet, inches = int(feet), int(inches)
+    real_inches = inches + (feet * 12)
+    cm = real_inches * 2.54
+    return int(round(cm, 0))
+
+
+
 # Scraping for new style mls games.
 
 team_dict = {
@@ -78,7 +92,7 @@ def scrape_game_data(url, competition):
         'sources': [url],
         }    
 
-@set_cache
+@data_cache
 def scrape_goals(url, competition):
     u2 = '%s/stats' % url
     game_data = scrape_game_data(url, competition)
@@ -244,11 +258,81 @@ def scrape_competition(url, competition):
     return games, g2, l2
 
 
+
+def scrape_all_bios():
+    l = [
+        ('http://www.mlssoccer.com/players?page=%s', 12),
+        ('http://www.mlssoccer.com/players?page=%s&field_player_club_nid=All&tid_2=198&title=', 13)
+        ]
+    urls = set()
+
+    for url_template, pages in l:
+        for page in range(pages):
+            url = url_template % page
+            soup = scrape_soup(url)
+            table = soup.find('table', 'views-table')
+            anchors = [e['href'] for e in table.findAll('a')]
+            for a in anchors:
+                if a.startswith('/players/'):
+                    u = 'http://www.mlssoccer.com' + a
+                    urls.add(u)
+
+    bios = []
+
+    print(len(urls))
+
+    for url in sorted(urls):
+        b = scrape_bio(url)
+        bios.append(b)
+        #print(b)
+
+    return bios
+
+
+@data_cache
+def scrape_bio(url):
+    soup = scrape_soup(url, sleep=1)
+
+    name = get_contents(soup.find('div', 'header_title').find('h1'))
+    bio_data = [get_contents(e).split(':') for e in soup.find('div', 'player-info').findAll('li')]
+
+    d = dict([(key.lower(), value) for (key, value) in bio_data])
+
+
+    birthdate = birthplace = height = weight = None
+
+    if d.get('birth date'):
+        birthdate = datetime.datetime.strptime(d['birth date'], "%m-%d-%Y")
+
+    if d.get('weight'):
+        weight = int(d['weight'].split('lbs')[0].strip())
+
+    if d.get('height'):
+        h = d['height'].replace('\'', '').replace('"', '').split(' ')
+
+        if len(h) == 1:
+            height = inches_to_cm(0, h[0])
+        elif len(h) == 2:
+            height = inches_to_cm(h[1], h[0])
+
+
+    b = {
+        'name': name,
+        'birthdate': birthdate,
+        'birthplace': d.get('birthplace'),
+        'height': height,
+        'weight': weight,
+        }
+
+
+    return b
+
 if __name__ == "__main__":
     #scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=45&broadcast_type=all&op=Search&form_id=mls_schedule_form",
     #                   "MLS Cup Playoffs")
     #print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
     #                          "MLS Cup"))
 
-    print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2011&club=all&competition_type=46&broadcast_type=all&op=Search&form_id=mls_schedule_form",
-                              "Major League Soccer"))
+    #print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2011&club=all&competition_type=46&broadcast_type=all&op=Search&form_id=mls_schedule_form",
+    #                          "Major League Soccer"))
+    scrape_all_bios()
