@@ -70,13 +70,8 @@ def scrape_url(url, refresh=False, encoding='utf-8', sleep=5, fix_tags=False, ur
             pass
 
     if data is None:
-        time.sleep(sleep)
         print("downloading %s" % url)
-
-        # Requests is not returning correct data.
-        # e.g. http://www.fifa.com/worldcup/archive/edition=84/results/matches/match=3051/report.html
-        # gets trash back.
-        #data = requests.get(url, headers=[('User-Agent', USER_AGENT)]).read()
+        time.sleep(sleep)
 
         opener = build_opener()
         opener.addheaders = [('User-agent', USER_AGENT)]
@@ -93,48 +88,6 @@ def scrape_url(url, refresh=False, encoding='utf-8', sleep=5, fix_tags=False, ur
         f.write(data)
         f.close()
 
-    # jesus christ.
-    """
-    try:
-        data = data.replace("</scr'+'ipt>", "</script>")
-    except:
-        import pdb; pdb.set_trace()
-
-
-    data = data.replace("</scr' + 'ipt", "</script")
-    data = data.replace("</scr'+'ipt>", "</script>")
-    data = data.replace("</SCRI' + 'PT>", "</SCRIPT>")
-    data = data.replace("</scri'+'pt>", "</script>")
-    data = data.replace('"RowHeader""', '"RowHeader"')
-    data = data.replace("<meta content=  </div>", "<meta></div>")
-    data = data.replace("<meta charset=  </div>", "<meta></div>")
-    data = data.replace("<p style=  </div>", "<p></div>")
-    """
-
-
-    """
-    # Seeing this problem with mlssoccer.com for some reason.
-    if fix_tags:
-        data = data.replace("&lt;", '<')
-        data = data.replace("&gt;", '>')
-    """
-
-    """
-    # Missing quotation mark. (http://soccernet.espn.go.com/match?id=331193&cc=5901)
-    data = data.replace('href=http', 'href="http')
-
-    # Bad tag.
-    data = data.replace("<font size=  </div>", "</div>")
-
-    # Oh shit! There was some bad unicode data in eu-football.info
-    # Couldn't find an encoding so I'm just killing it.
-    # Looked to be involved with goolge analytics.
-    data = data.replace("\xf1\xee\xe7\xe4\xe0\xed\xee", "")
-
-    # http://www.mlssoccer.com/schedule?month=all&year=1996&club=all&competition_type=all
-    data = data.replace('<img alt="" src="/sites/league/files/eljimador_300x100.gif" style="border: medium none; width: 300px; height: 100px;" <img', "<img")
-    """
-    #data = data.replace("""onclick="this.href=this.href+'?ref=espn_deportes&refkw=deportes+tickets'""", '')
 
     if encoding:
         data = data.decode(encoding)
