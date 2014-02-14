@@ -47,10 +47,13 @@ def scrape_games(gids):
 
     return games
 
+
 @set_cache
 def scrape_game(gid):
+
+
     url = 'http://msn.mediotiempo.com/ficha.php?id_partido=%s' % gid
-    soup = scrape_soup(url, encoding='iso_8859_1')
+    soup = scrape_soup(url, encoding='iso_8859_1', sleep=2)
     breadcrumbs = soup.find("div", {"id": "breadcrums"})
     try:
         competition, rest = [e for e in breadcrumbs.contents[1].childGenerator()]
@@ -73,6 +76,13 @@ def scrape_game(gid):
     date_s, stadium = context[:2]
     referees = [e.split('(')[0] for e in context[2:]]
 
+    if referees:
+        referee = referees[0]
+        linesmen = referees[1:]
+    else:
+        referee = None
+        linesmen = []
+
     try:
         _, day, month, year = date_re.search(date_s.lower()).groups()
     except:
@@ -84,7 +94,7 @@ def scrape_game(gid):
 
 
     game = {
-        'competition': competition,
+        'competition': str(competition) , # throwing Pickle error when using bs4.NavigableString
         #'country': country,
         'season': season,
         'round': sround,
@@ -100,8 +110,8 @@ def scrape_game(gid):
         #'stadium': stadium,
         'location': stadium,
 
-        'referee': referees[0].strip(),
-        'linesmen': [e.strip() for e in referees[1:]],
+        'referee': referee,
+        'linesmen': linesmen,
 
         'sources': [url],
         }
