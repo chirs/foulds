@@ -36,7 +36,7 @@ def scrape_player_bios():
     stats = []
 
     for i, slug in enumerate(slugs[:2950]):
-        print(i)
+        #print(i)
         purl = 'http://www.premierleague.com/en-gb/players/profile.career-history.html/%s' % slug
         #bio = scrape_player_bio(purl)
         #bios.append(bio)
@@ -118,20 +118,22 @@ def scrape_calendars():
         season = '%s-%s' % (e, e + 1)
         url = 'http://www.premierleague.com/content/premierleague/en-gb/matchday/results.html?paramSeason=%s&view=.dateSeason' % season
         games = scrape_calendar(url)
+        games = [e for e in games if season in e]
         urls.extend(games)
 
     games = []
     for url in urls:
         gd = scrape_game_data(url)
-        print(gd)
+        #print(gd)
         games.append(gd)
 
     return games
         
 
-
+@data_cache
 def scrape_game_data(url):
-    soup = scrape_soup(url)
+
+    soup = scrape_soup(url, sleep=5)
     teaminfo = soup.find('table', 'teaminfo')
 
     home_team = get_contents(teaminfo.find('td', 'home'))
@@ -144,7 +146,11 @@ def scrape_game_data(url):
 
 #<p class="fixtureinfo"><span widget="localeDate" timestamp="737145900000" format="dddd d MMMM yyyy">Tuesday 11 May 1993</span> | Highbury | Referee: <a href="/en-gb/matchday/matches/1992-1993/epl.match-report.html/">Keith Cooper</a> | Attendance 26,393</p>
     
-    date, stadium, referee, attendance = fixtureinfo.split('|')
+    try:
+        date, stadium, referee, attendance = fixtureinfo.split('|')
+    except:
+        import pdb; pdb.set_trace()
+
     referee = referee.split(':')[1]
     attendance = int(attendance.replace('Attendance', '').replace(',', ''))
 
@@ -163,15 +169,10 @@ def scrape_game_data(url):
         }
     
 
-
-    
-
-
-
 def scrape_calendar(url):
     soup = scrape_soup(url)
 
-    urls = [e['href'] for e in soup.findAll('a')]
+    urls = [e.get('href') for e in soup.findAll('a')]
     match_urls = [e for e in urls if e and '/matches/' in e]
 
     return ['http://www.premierleague.com' + e for e in match_urls]
