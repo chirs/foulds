@@ -58,7 +58,7 @@ def scrape_2013_games():
             l.append(scrape_game_data(e))
         except:
             print(e)
-    return l
+    return [e for e in l if e]
 
 
 def scrape_2013_game_stats():
@@ -128,21 +128,6 @@ def psf(e):
     
 @data_cache
 def scrape_game_stats(url):
-    game_data = scrape_game_data(url)
-
-    try:
-        soup = scrape_soup(url, encoding='iso-8859-1')
-    except urllib.error.HTTPError:
-        return {}
-
-    lineup_soup = soup.find('table', 'statsPL').find('tbody')
-
-    try:
-        team1_lineups = lineup_soup.findAll('tbody')[0]
-        team2_lineups = lineup_soup.findAll('tbody')[1]
-    except:
-        return []
-
 
     def process_game_stat(tr, team):
         tds = tr.findAll('td')
@@ -165,10 +150,30 @@ def scrape_game_stats(url):
                 }
 
 
+    game_data = scrape_game_data(url)
+    if not game_data:
+        return []
+
+    try:
+        soup = scrape_soup(url, encoding='iso-8859-1')
+    except urllib.error.HTTPError:
+        return []
+
+    lineup_soup = soup.find('table', 'statsPL').find('tbody')
+
+    try:
+        team1_lineups = lineup_soup.findAll('tbody')[0]
+        team2_lineups = lineup_soup.findAll('tbody')[1]
+    except:
+        return []
+
     game_stats = []
 
-    for e in team1_lineups.findAll('tr', 'pl-a-row'):
-        game_stats.append(process_game_stat(e, game_data['team1']))
+    try:
+        for e in team1_lineups.findAll('tr', 'pl-a-row'):
+            game_stats.append(process_game_stat(e, game_data['team1']))
+    except:
+        import pdb; pdb.set_trace()
 
     for e in team2_lineups.findAll('tr', 'pl-a-row'):
         game_stats.append(process_game_stat(e, game_data['team2']))

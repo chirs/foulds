@@ -1,6 +1,9 @@
 #!/usr/local/bin/env python
 # -*- coding: utf-8 -*-
 
+
+# Scrape to approximately 48400
+
 import datetime
 import re
 
@@ -48,7 +51,7 @@ def scrape_games(gids):
     return games
 
 
-@set_cache
+@data_cache
 def scrape_game(gid):
 
 
@@ -56,25 +59,92 @@ def scrape_game(gid):
     soup = scrape_soup(url, encoding='iso_8859_1', sleep=2)
     breadcrumbs = soup.find("div", {"id": "breadcrums"})
     try:
-        competition, rest = [e for e in breadcrumbs.contents[1].childGenerator()]
-        season, sround = [get_contents(e) for e in rest.findAll('a')]
+        try:
+            competition, rest = [e for e in breadcrumbs.contents[1].childGenerator()]
+            season, sround = [get_contents(e) for e in rest.findAll('a')]
         #country, competition, season, sround, matchup = [e for e in [get_contents(e) for e in breadcrumbs] if e.strip()]
+        except:
+            print("Competition failure")
+            #import pdb; pdb.set_trace()
+            return None
     except:
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         print("Breadcrumbs Failure on %s" % gid)
         return None
 
+    # Transform seasons names like "Champions 2007-2008" into "2007-2008"
+    
+
+    winter_re = re.compile(".*?(\d{4}-\d{4}).*")
+    summer_re = re.compile(".*?(\d{4}).*")
+
+    wm = winter_re.match(season)
+    sm = summer_re.match(season)
+
+    if wm:
+        season = wm.groups()[0]
+
+    elif sm:
+        season = sm.groups()[0]
+
+    else:
+        print(season)
+        season = None
+
+    sround = sround.replace("Jornada", "")
+
+    try:
+        sround = int(sround)
+    except:
+        sround = ''
+
+
     izquierdas = soup.findAll("div", 'cuadro_izquierda')
     derechas = soup.findAll("div", 'cuadro_derecha')
-    if len(izquierdas) < 3:
+
+    if len(izquierdas) < 2:
         print("Failure on %s" % gid)
+        import pdb; pdb.set_trace()
         return None
 
     team1, score, team2 = [e for e in [get_contents(e) for e in izquierdas[1]] if e]
-    team1_score, team2_score = [int(e) for e in score.split('-')]
-    context = [e for e in [get_contents(e) for e in izquierdas[2]] if e.strip()]
-    date_s, stadium = context[:2]
-    referees = [e.split('(')[0] for e in context[2:]]
+
+    pk_regex = re.compile('\(\d+\)(\d+) - (\d+)\(\d+\)') 
+    pk_match = pk_regex.match(score)
+
+    if pk_match:
+        # Add pk_score capture.
+        team1_score, team2_score = [int(e) for e in pk_match.groups()]
+    elif score.strip() == '-':
+        team1_score = team2_score = None
+    else:
+        try:
+            team1_score, team2_score = [int(e) for e in score.split('-')]
+        except:
+            import pdb; pdb.set_trace()
+
+
+    if len(izquierdas) <= 2:
+        date_s = None
+        stadium = None
+        referees = []
+
+    else:
+        try:
+            context = [e for e in [get_contents(e) for e in izquierdas[2]] if e.strip()]
+
+            if len(context) == 1:
+                date_s = context[0]
+                stadium = None
+            else:
+                date_s, stadium = context[:2]
+
+            referees = [e.split('(')[0] for e in context[2:]]
+
+        except:
+            import pdb; pdb.set_trace()
+                    
+                  
 
     if referees:
         referee = referees[0]
@@ -83,15 +153,15 @@ def scrape_game(gid):
         referee = None
         linesmen = []
 
-    try:
-        _, day, month, year = date_re.search(date_s.lower()).groups()
-    except:
-        print("Date Failure on %s" % gid)
-        return None
-
-    if month not in months:
-        import pdb; pdb.set_trace()
-
+    if date_s is None:
+        date = None
+    else:
+        try:
+            _, day, month, year = date_re.search(date_s.lower()).groups()
+            date = datetime.datetime(int(year), months[month], int(day))
+        except:
+            print("Date Failure on %s" % gid)
+            return None
 
     game = {
         'competition': str(competition) , # throwing Pickle error when using bs4.NavigableString
@@ -100,7 +170,7 @@ def scrape_game(gid):
         'round': sround,
         'group': None,
 
-        'date': datetime.datetime(int(year), months[month], int(day)),
+        'date': date, 
 
         'team1': team1.title(),
         'team2': team2.title(),
@@ -119,12 +189,20 @@ def scrape_game(gid):
 
     #goals = [get_contents(e) for e in derechas.findAll("span", "mini_titulo")]
     goals = []
+    lineups = []
+    fouls = []
+
+    #import pdb; pdb.set_trace()
 
     return game, goals
 
 
 
 
+
 if __name__ == "__main__":
     # Have downloaded 10000 to 11800
-    print(scrape_games(range(10000, 11500)))
+    #print(scrape_games(range(10000, 11500)))
+    #print(scrape_game(4692))
+    print(scrape_game(2000))
+    #'http://www.mediotiempo.com/ficha.php?id_partido=4692'

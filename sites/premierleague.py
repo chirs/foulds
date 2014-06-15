@@ -111,32 +111,38 @@ def scrape_player_stats(url):
     return l
 
 
-
 def scrape_calendars():
     urls = []
-    for e in range(1992, 2007):
+    for e in range(1992, 2013):
         season = '%s-%s' % (e, e + 1)
         url = 'http://www.premierleague.com/content/premierleague/en-gb/matchday/results.html?paramSeason=%s&view=.dateSeason' % season
-        games = scrape_calendar(url)
-        games = [e for e in games if season in e]
-        urls.extend(games)
+        game_urls = scrape_calendar(url)
+        game_season_data = [(e, season) for e in game_urls if season in e]
+        urls.extend(game_season_data)
 
     games = []
-    for url in urls:
-        gd = scrape_game_data(url)
+    for url, season in urls:
+        gd = scrape_game_data(url, season)
         #print(gd)
         games.append(gd)
 
-    return games
+    return [e for e in games if e]
         
 
 @data_cache
-def scrape_game_data(url):
+def scrape_game_data(url, season):
 
     soup = scrape_soup(url, sleep=5)
     teaminfo = soup.find('table', 'teaminfo')
 
-    home_team = get_contents(teaminfo.find('td', 'home'))
+    # Oh no!
+    try:
+        home_team = get_contents(teaminfo.find('td', 'home'))
+    except:
+        print("Processing failure.")
+        return {}
+
+
     away_team = get_contents(teaminfo.find('td', 'away'))
 
     home_score = int(get_contents(teaminfo.find('span', 'homeScore')))
@@ -165,10 +171,14 @@ def scrape_game_data(url):
         'home_team': home_team,
         'stadium': stadium,
         'referee': referee,
-        'attendance': attendance
+        'attendance': attendance,
+        'competition': 'Premier League',
+        'season': season,
+        'sources': [url,],
         }
     
 
+@data_cache
 def scrape_calendar(url):
     soup = scrape_soup(url)
 

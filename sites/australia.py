@@ -30,10 +30,9 @@ def scrape_aleague():
     #for season, gid in l:
     #    lineups.append(scrape_aleague_lineups(gid, season))
 
-    game_stats = []
-    for season, gid in l:
-        game_stats.append(scrape_aleague_game_stats(gid, season))
-
+    #game_stats = []
+    #for season, gid in l:
+    #    game_stats.append(scrape_aleague_game_stats(gid, season))
 
 
     games = [e for e in games if e]
@@ -63,11 +62,14 @@ season_ids = [
     ('2010-2011', 173),
     ('2011-2012', 223),
     ('2012-2013', 261),
+    ('2013-2014', 286),
 ]
 
 
 @data_cache
 def scrape_aleague_game(gid, season):
+
+
     game_url = 'http://www.footballaustralia.com.au/aleague/matchcentre/matchstats/filler/%s' % gid
     soup = scrape_soup(game_url)
 
@@ -81,7 +83,12 @@ def scrape_aleague_game(gid, season):
         return {}
 
     date_string = get_contents(soup.find('span', {'id': 'headerdatetime' }))
-    dt = datetime.datetime.strptime(date_string, "%d %B %Y")
+
+    try:
+        dt = datetime.datetime.strptime(date_string, "%d %B %Y")
+    except ValueError:
+        print("Date parsing error.")
+        return {}
 
     return {
         'team1': home_team,
@@ -147,9 +154,6 @@ def scrape_aleague_game_stats(gid, season):
     game_data = scrape_aleague_game(gid, season)
 
     soup = scrape_soup(game_url)
-
-    import pdb; pdb.set_trace()
-    
 
     goal_scorers = [get_contents(e) for e in soup.findAll('div', 'goal_scorer')]
     goal_times = [get_contents(e) for e in soup.findAll('div', 'goal_time')]
@@ -237,6 +241,8 @@ if __name__ == '__main__':
     #print(scrape_aleague_game(''))
     #print(scrape_aleague_goals(''))
     #print(scrape_scoreboard(31, '2006-2007'))
-    #print(scrape_aleague())
+    print(scrape_aleague())
 
-    print(scrape_aleague_game_stats(340, 'A-League'))
+    #games, goals, lineups = scrape_aleague()
+
+    #print(scrape_aleague_game_stats(340, 'A-League'))

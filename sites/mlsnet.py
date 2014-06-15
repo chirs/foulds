@@ -108,7 +108,7 @@ def scrape_2005_bio(url):
     print(hometown)
 
     return {
-        #'name': name,
+        'name': name,
         #'hometown': hometown,
         'birthdate': birthdate,
         'img': img_path,

@@ -23,21 +23,8 @@
 
 
 """
-Need to figure out a way to refresh failed results.
-e.g. ran into a FC dallas game that couldn't be scraped.
-Will silently fail for now, but eventually need to do something else.
-
-
-How should a typical load go?
-
-Cacheing sould happen on each level.
-
-But there are essentially three levels.
-
-Need to separate conceptually and cache different levels.
-
 Need to make sure that new date urls are being loaded, but aren't taking too long.
-Use a single objects that gets and parses urls in one go (for a given date/code),
+Use a single object that gets and parses urls in one go (for a given date/code),
 and remembers those permanently. Don't cache the backwards searching thing.
 
 1. Load game urls.
@@ -48,7 +35,6 @@ and remembers those permanently. Don't cache the backwards searching thing.
 2. Get game urls for each scoreboard.
 3. Fetch game data from urls.
 4. Use game data to fetch lineup, goal, and foul data.
-
 """
 
 
@@ -68,6 +54,7 @@ ROOT_URL = 'http://soccernet.espn.go.com'
 STOP_DATE = datetime.date(2012, 1, 1)
 
 
+"""
 SOCCERNET_ALIASES = {
     # CONCACAF Champions League...
     'Motagua': 'CD Motagua',
@@ -98,8 +85,7 @@ SOCCERNET_ALIASES = {
     'Toronto': 'Toronto FC',
     'Vancouver': 'Vancouver Whitecaps',
     }
-
-
+"""
 
 def code_to_competition(league_code):
     return {

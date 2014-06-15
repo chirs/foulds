@@ -333,6 +333,6 @@ if __name__ == "__main__":
     #print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2012&club=all&competition_type=44&broadcast_type=all&op=Search&form_id=mls_schedule_form",
     #                          "MLS Cup"))
 
-    #print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2011&club=all&competition_type=46&broadcast_type=all&op=Search&form_id=mls_schedule_form",
-    #                          "Major League Soccer"))
+    print(scrape_competition("http://www.mlssoccer.com/schedule?month=all&year=2011&club=all&competition_type=46&broadcast_type=all&op=Search&form_id=mls_schedule_form",
+                              "Major League Soccer"))
     scrape_all_bios()
